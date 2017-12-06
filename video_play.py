@@ -33,7 +33,6 @@ class Video_RC:
     
     def __init__(self, video_receiver):
         self.video_receiver = video_receiver
-        cv2.namedWindow('RC')
         # Initialize UDP message sender
         self.msg_sender = UDP_sender.UDP_sender("Message", CLIENT_ADDR, CLIENT_SEND_MSG_PORT, SERVER_ADDR, SERVER_RECV_MSG_PORT)
     
@@ -161,10 +160,13 @@ class Video_receiver:
                             print "Frame #{}: Got all the chunks, but unpickling failed.".format(frame_id_expected)
                             
                         print "Frame #{}: Show Time! hash {}".format(frame_id_expected, hash(frame.tostring()))
-                        cv2.imshow('video_recv', frame)
-                        #cv2.waitKey(1)        
+                        self.do_stuff_with_frame(frame)
+                        #cv2.waitKey(1)
             else:
                 pass#; print "msg_type is not recognized"
+
+    def do_stuff_with_frame(self, frame):
+        cv2.imshow('video_recv', frame)
 
     def receive_loop_simple_example(self):
         i = 0
@@ -179,9 +181,10 @@ class Video_receiver:
     def close(self):
         self.socket_receive.close()
         cv2.destroyAllWindows()
+        print "Video play: Windows closed!"
 
 
 receiver = Video_receiver()
 receiver.receive_video()
-
+print "Video play: Bye!"
 #import pdb; pdb.set_trace()

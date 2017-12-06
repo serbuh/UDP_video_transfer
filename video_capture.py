@@ -36,8 +36,10 @@ class Capture():
         self.video_name = video_name        
         # Maximum size of the packet in bytes that can be sent through UDP
         self.max_packet_size = max_packet_size
-        self.cap = cv2.VideoCapture(video_name)
-        cv2.namedWindow('video_orig')
+        
+        self.start_video()
+        
+        cv2.waitKey(1)
         cv2.waitKey(1)
         
         # Get the frame properties
@@ -75,8 +77,9 @@ class Capture():
 
             (ret, frame_orig) = self.cap.read()  # Capture the frame-by-frame
             if frame_orig == None: # No video or video is over
-                self.close()
-                break
+                print "Video capture: End of video"
+                self.stop_video()
+                continue
             
             
             # Resize the frame
@@ -107,17 +110,20 @@ class Capture():
                 self.video_sender.send(chunk_packet)
             
             # Show frame that was sent
-            cv2.imshow('video_orig', frame)
-            #print "frame #{} hash {}".format(str(self.frame_id), str(hash(frame.tostring())))
-            #if self.frame_id == 20: import pdb; pdb.set_trace() ###############################
-            
-            # Stop the capture loop with predefined keyboard key
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.close()                
+            if (self.show_frame(frame) is False):
                 break
 
             #Timer.Timer.toc("Frame #" + str(self.frame_id))
             self.frame_id = self.frame_id + 1
+
+    def show_frame(self,frame):
+        #cv2.imshow('video_orig', frame) # Uncomment it if you want to show the video here
+        
+        # Stop the capture loop with predefined keyboard key
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            self.close()                
+            return False
+        return True
     
     def listen_for_command(self):
         try:
@@ -143,17 +149,24 @@ class Capture():
             return True
         except:
             return True # no message received - nothing to do
-        
-    def restart_video(self):
-        self.cap.release()
-        cv2.destroyAllWindows()
+    
+    def start_video(self):
         self.cap = cv2.VideoCapture(self.video_name)
-        cv2.namedWindow('video_orig')
+        #cv2.namedWindow('video_orig') # Uncomment it if you want to show the video here
         cv2.waitKey(1)
+        
+    def stop_video(self):
+        print "Video capture: Stop"        
+        self.cap.release()
+
+    def restart_video(self):
+        self.stop_video()
+        self.start_video()
 
     def close(self):
-        self.cap.release()
-        cv2.destroyAllWindows()
+        print "Video capture: Close"
+        self.stop_video()
+        cv2.destroyAllWindows()        
         self.video_sender.close()
         
 # Capture
